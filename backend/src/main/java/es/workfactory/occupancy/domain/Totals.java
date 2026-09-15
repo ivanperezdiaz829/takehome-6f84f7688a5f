@@ -35,15 +35,41 @@ public final class Totals {
      */
     public static List<PoliceReportLine> policeReportLines(List<Guest> guests, String today) {
         return guests.stream().map(guest -> {
+            String docNum = guest.documentNumber();
+            String docType = "PAS";
+            if (docNum != null) {
+                String cleaned = docNum.trim().toUpperCase();
+                if (cleaned.matches("^[0-9]{8}[A-Z]$")) docType = "NIF";
+                else if (cleaned.matches("^[XYZ][0-9]{7}[A-Z]$")) docType = "NIE";
+                else if (cleaned.length() == 9 && Character.isLetter(cleaned.charAt(8))) docType = "NIF";
+                else docType = "PAS";
+            }
+
+            String rawGender = guest.gender() != null ? guest.gender().trim().toUpperCase() : "";
+            String gender = "O";
+            if (rawGender.contains("MALE") || rawGender.equals("H") || rawGender.equals("M")) {
+                if (rawGender.equals("M") && !rawGender.contains("FEMALE")) gender = "H";
+                else if (rawGender.contains("FEMALE") || rawGender.equals("F")) gender = "M";
+                else if (rawGender.contains("MALE") && !rawGender.contains("FEMALE")) gender = "H";
+                else gender = "H";
+            } else if (rawGender.contains("FEMALE") || rawGender.equals("F")) gender = "M";
+
+            String rawKinship = guest.kinshipRelationship() != null ? guest.kinshipRelationship().trim().toUpperCase() : "";
+            String kinship = "OT";
+            if (rawKinship.contains("SPOUSE") || rawKinship.contains("WIFE") || rawKinship.contains("HUSBAND") || rawKinship.contains("CY")) kinship = "CY";
+            else if (rawKinship.contains("CHILD") || rawKinship.contains("SON") || rawKinship.contains("DAUGHTER") || rawKinship.contains("HJ")) kinship = "HJ";
+            else if (rawKinship.contains("PRIMARY") || rawKinship.contains("SELF") || rawKinship.contains("TITULAR") || rawKinship.contains("TI")) kinship = "TI";
+            else if (rawKinship.isEmpty() || rawKinship.equals("NONE")) kinship = "TI";
+
             return new PoliceReportLine(
-                guest.firstName(),
-                guest.lastName(),
-                guest.birthDate(),
-                guest.nationality(),
-                guest.gender(),
-                guest.kinshipRelationship(),
-                null,
-                guest.documentNumber()
+                    guest.firstName(),
+                    guest.lastName(),
+                    guest.birthDate(),
+                    guest.nationality(),
+                    gender,
+                    kinship,
+                    docType,
+                    docNum
             );
         }).collect(Collectors.toList());
     }
