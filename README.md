@@ -31,7 +31,7 @@ Este proyecto implementa un servicio backend y su correspondiente interfaz gráf
    ```bash
    cd backend
    cp .env.example .env
-   # Edita el .env y pon: API_TOKEN=tu_token_aqui y API_BASE=[https://join.workfactory.es/api](https://join.workfactory.es/api)
+   ```
 
 2. **Ejecutar el servidor Backend + Pantalla en localhost:3000:**
     ```bash
