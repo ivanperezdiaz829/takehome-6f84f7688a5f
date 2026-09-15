@@ -70,11 +70,17 @@ async function ask(path, options = {}) {
  * Lo único que puntúa: que al mirarlo se entienda que el aforo y los viajeros son dos números
  * distintos, y de dónde sale cada uno.
  */
-function renderList(bookings) {
-    out.className = "todo";
-    out.innerHTML = `<p><b>PANTALLA_SIN_ESCRIBIR</b> · el listado</p>
-      <p>La API te ha devuelto ${bookings.length} reservas y esta función todavía no las pinta.
-      Cuando lo haga, este aviso desaparece, y hay un test que lo comprueba.</p>`;
+function renderList(items) {
+    const container = document.getElementById('bookings-list');
+    if (!container) return;
+    container.innerHTML = items.map(b => `
+        <div class="booking-card" onclick="selectBooking('${b.bookingId}')">
+            <h3>Reserva: ${b.bookingId}</h3>
+            <p>Propiedad: ${b.property}</p>
+            <p>Aforo: ${b.occupancy} / Capacidad: ${b.capacity}</p>
+            <p>Viajeros declarados: ${b.travellersDeclared}</p>
+        </div>
+    `).join('');
 }
 
 /**
@@ -87,11 +93,21 @@ function renderList(bookings) {
  * Los estados que se te van a dar de verdad: cargando, error, sin declarar, pendiente y
  * rechazada. Cúbrelos.
  */
-function renderDetail(data) {
-    out.className = "todo";
-    out.innerHTML = `<p><b>PANTALLA_SIN_ESCRIBIR</b> · el detalle de ${escapeHtml(data.bookingId ?? "")}</p>
-      <p>Aquí van los dos totales, la declaración y el botón para declararla.</p>
-      <p><a class="back" href="?">← todas las reservas</a></p>`;
+function renderDetail(summary) {
+    const detailContainer = document.getElementById('booking-detail');
+    if (!detailContainer) return;
+    detailContainer.innerHTML = `
+        <h2>Detalle de la Reserva ${summary.bookingId}</h2>
+        <p><strong>Propiedad:</strong> ${summary.property}</p>
+        <p><strong>Capacidad:</strong> ${summary.capacity}</p>
+        <p><strong>Ocupación:</strong> ${summary.occupancy}</p>
+        <p><strong>Viajeros declarados:</strong> ${summary.travellersDeclared}</p>
+        <div>
+            <h3>Declaración</h3>
+            <pre>${JSON.stringify(summary.declaration, null, 2)}</pre>
+        </div>
+        <button onclick="declareBooking('${summary.bookingId}')">Declarar a la Policía</button>
+    `;
 }
 
 /** El enrutado y el manejo del fallo. Escrito, para que empieces por lo que se ve. */
