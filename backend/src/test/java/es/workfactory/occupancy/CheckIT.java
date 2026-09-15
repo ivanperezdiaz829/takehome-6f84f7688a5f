@@ -133,6 +133,10 @@ class CheckIT {
     }
 
     private static JsonNode upstream(String path) throws Exception {
+        if (path.startsWith("/api")) {
+            path = path.substring(4);
+        }
+
         for (int attempt = 1; ; attempt++) {
             HttpResponse<String> response;
             try {
