@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: es.workfactory.occupancy.CheckIT
 -------------------------------------------------------------------------------
-Tests run: 39, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 19.50 s -- in es.workfactory.occupancy.CheckIT
+Tests run: 39, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 19.08 s -- in es.workfactory.occupancy.CheckIT

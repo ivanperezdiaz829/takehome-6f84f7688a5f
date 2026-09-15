@@ -1,131 +1,427 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Occupancy and police report</title>
-<style>
-  body { font: 15px/1.5 system-ui, sans-serif; margin: 2rem auto; max-width: 52rem; padding: 0 1rem; }
-  h1 { font-size: 1.25rem; }
-  h2 { font-size: 1.1rem; }
-  table { border-collapse: collapse; width: 100%; }
-  th, td { text-align: left; padding: .5rem .75rem; border-bottom: 1px solid #e5e5e5; }
-  th { font-weight: 600; color: #555; font-size: .875rem; }
-  td.number { font-variant-numeric: tabular-nums; }
-  tbody tr { cursor: pointer; }
-  tbody tr:hover { background: #f6f6f6; }
-  dl { display: grid; grid-template-columns: auto 1fr; gap: .4rem 1.5rem; align-items: baseline; }
-  dt { color: #555; }
-  dd { margin: 0; font-variant-numeric: tabular-nums; }
-  .note { color: #777; font-size: .875rem; }
-  .problem { color: #a11; }
-  .back { display: inline-block; margin-bottom: 1rem; }
-  button { font: inherit; padding: .4rem .9rem; cursor: pointer; }
-  .todo { border: 1px dashed #b58; background: #fdf7fb; padding: 1rem 1.25rem; }
-</style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Occupancy and Police Report - Dashboard</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success: #16a34a;
+            --warning: #d97706;
+            --danger: #dc2626;
+            --bg-main: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            margin: 0;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 60rem;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 1rem;
+        }
+
+        h1 { font-size: 1.75rem; color: var(--primary); margin: 0 0 0.5rem 0; }
+        .subtitle { color: var(--text-muted); font-size: 0.95rem; margin: 0; }
+
+        /* Dashboard Grid */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .booking-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .booking-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            border-color: var(--primary);
+        }
+
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .booking-card h3 {
+            font-size: 1.1rem;
+            margin: 0 0 1rem 0;
+            color: var(--text-main);
+        }
+
+        /* Badges */
+        .badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.6rem;
+            border-radius: 9999px;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+        .badge-success { background: #dcfce7; color: var(--success); }
+        .badge-warning { background: #fef3c7; color: var(--warning); }
+        .badge-error { background: #fee2e2; color: var(--danger); }
+        .badge-pending { background: #e0f2fe; color: #0284c7; }
+        .property-badge { background: #f1f5f9; color: var(--text-muted); }
+
+        /* Metrics inside card */
+        .metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            background: #f8fafc;
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+        }
+
+        .metric-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .metric-label { color: var(--text-muted); font-size: 0.75rem; }
+        .metric-value { font-weight: 700; font-size: 1rem; }
+        .highlight-occupancy .metric-value { color: var(--primary); }
+        .highlight-police .metric-value { color: #7c3aed; }
+
+        /* Detail View styling */
+        .detail-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .detail-grid { grid-template-columns: 1fr; }
+        }
+
+        .info-card {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.25rem;
+        }
+        .info-card h3 { margin-top: 0; font-size: 1rem; color: var(--text-muted); }
+
+        dl { display: grid; grid-template-columns: auto 1fr; gap: 0.5rem 1rem; margin: 0; }
+        dt { color: var(--text-muted); }
+        dd { margin: 0; font-weight: 500; }
+
+        /* Comparison box for business logic */
+        .comparison-card {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+        }
+        .comparison-box {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            text-align: center;
+        }
+        .comp-item {
+            background: white;
+            padding: 0.75rem;
+            border-radius: 6px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .comp-title { display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem; }
+        .comp-num { font-size: 1.5rem; font-weight: 800; color: var(--primary); }
+        .comp-desc { display: block; font-size: 0.7rem; color: var(--text-muted); margin-top: 0.25rem; }
+
+        /* Declaration section */
+        .declaration-section {
+            border-top: 1px solid var(--border);
+            padding-top: 1.5rem;
+        }
+
+        .decl-stats {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+        .stat-box { background: #f1f5f9; padding: 0.5rem 1rem; border-radius: 6px; }
+        .success-text { color: var(--success); font-weight: 600; }
+        .error-text { color: var(--danger); font-weight: 600; }
+
+        pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+        }
+
+        /* Buttons */
+        button {
+            font: inherit;
+            padding: 0.6rem 1.25rem;
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            transition: background 0.2s;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-secondary { background: #e2e8f0; color: var(--text-main); }
+        .btn-secondary:hover { background: #cbd5e1; }
+
+        .back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            text-decoration: none;
+            color: var(--primary);
+            font-weight: 600;
+        }
+        .back:hover { text-decoration: underline; }
+
+        .problem { color: var(--danger); background: #fee2e2; padding: 1rem; border-radius: 8px; }
+        .note { color: var(--text-muted); font-size: 0.875rem; }
+    </style>
 </head>
 <body>
-<h1>Occupancy and police report</h1>
+<div class="container">
+    <header>
+        <h1>Gestión de Aforo y Partes Policiales</h1>
+        <p class="subtitle">Control de ocupación de villas y declaración automatizada ante las autoridades</p>
+    </header>
 
-<div id="out">Cargando…</div>
+    <div id="out">Cargando datos del sistema…</div>
+</div>
 
 <script>
-/**
- * La pantalla. La mitad de delante del ejercicio, y pesa lo mismo que la de detrás.
- *
- * Escrito ya: el `fetch` con el sobre de error, el enrutado por `?booking=` y el escapado.
- * Tuyo: las dos funciones que pintan. Igual que en el dominio hay dos sin escribir, aquí hay dos.
- *
- * Puedes tirar este fichero entero y montarlo con lo que quieras: React, Vue, Svelte, Vite o
- * HTML plano. No se puntúa la tecnología ni el diseño.
- */
-const out = document.getElementById("out");
+    const out = document.getElementById("out");
 
-function escapeHtml(value) {
-    return String(value ?? "").replace(/[&<>"']/g, (character) => ({
-        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
-    })[character]);
-}
-
-/**
- * Pide algo a tu API. Sirve para el GET y para el POST, y ya entiende el sobre de error
- * que devuelven tus manejadores.
- */
-async function ask(path, options = {}) {
-    const response = await fetch(path, options);
-    const body = await response.json().catch(() => null);
-    if (!response.ok) {
-        throw new Error(`${body?.error?.code ?? response.status}: ${body?.error?.message ?? ""}`);
+    function escapeHtml(value) {
+        return String(value ?? "").replace(/[&<>"']/g, (character) => ({
+            "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+        })[character]);
     }
-    return body;
-}
 
-/**
- * TU TRABAJO (1 de 2): el listado.
- *
- * Recibe lo que devuelve `GET /api/bookings`. De cada reserva tiene que verse la capacidad, el
- * aforo, los viajeros que van al parte y cómo quedó la declaración, y al pulsar una, entrar en su
- * detalle (`?booking=<id>`).
- *
- * Lo único que puntúa: que al mirarlo se entienda que el aforo y los viajeros son dos números
- * distintos, y de dónde sale cada uno.
- */
-function renderList(items) {
-    const container = document.getElementById('bookings-list');
-    if (!container) return;
-    container.innerHTML = items.map(b => `
-        <div class="booking-card" onclick="selectBooking('${b.bookingId}')">
-            <h3>Reserva: ${b.bookingId}</h3>
-            <p>Propiedad: ${b.property}</p>
-            <p>Aforo: ${b.occupancy} / Capacidad: ${b.capacity}</p>
-            <p>Viajeros declarados: ${b.travellersDeclared}</p>
-        </div>
-    `).join('');
-}
-
-/**
- * TU TRABAJO (2 de 2): el detalle de una reserva.
- *
- * Recibe lo que devuelve `GET /api/bookings/:id/summary`. Además de los números, desde aquí se
- * **declara el parte**: un botón que llama a `POST /api/bookings/:id/declaration` y enseña cómo
- * ha ido. Ten en cuenta que la autoridad no contesta al momento.
- *
- * Los estados que se te van a dar de verdad: cargando, error, sin declarar, pendiente y
- * rechazada. Cúbrelos.
- */
-function renderDetail(summary) {
-    const detailContainer = document.getElementById('booking-detail');
-    if (!detailContainer) return;
-    detailContainer.innerHTML = `
-        <h2>Detalle de la Reserva ${summary.bookingId}</h2>
-        <p><strong>Propiedad:</strong> ${summary.property}</p>
-        <p><strong>Capacidad:</strong> ${summary.capacity}</p>
-        <p><strong>Ocupación:</strong> ${summary.occupancy}</p>
-        <p><strong>Viajeros declarados:</strong> ${summary.travellersDeclared}</p>
-        <div>
-            <h3>Declaración</h3>
-            <pre>${JSON.stringify(summary.declaration, null, 2)}</pre>
-        </div>
-        <button onclick="declareBooking('${summary.bookingId}')">Declarar a la Policía</button>
-    `;
-}
-
-/** El enrutado y el manejo del fallo. Escrito, para que empieces por lo que se ve. */
-async function load() {
-    const wanted = new URLSearchParams(location.search).get("booking");
-    out.textContent = "Cargando…";
-    try {
-        if (wanted) {
-            renderDetail(await ask(`/api/bookings/${encodeURIComponent(wanted)}/summary`));
-        } else {
-            renderList((await ask("/api/bookings")).items ?? []);
+    async function ask(path, options = {}) {
+        const response = await fetch(path, options);
+        const body = await response.json().catch(() => null);
+        if (!response.ok) {
+            throw new Error(`${body?.error?.code ?? response.status}: ${body?.error?.message ?? ""}`);
         }
-    } catch (error) {
-        out.innerHTML = `<p class="problem">${escapeHtml(error.message ?? error)}</p>`;
+        return body;
     }
-}
 
-load();
+    function renderList(items) {
+        out.innerHTML = `
+        <div style="margin-bottom: 1.5rem;">
+            <h2>Reservas Registradas</h2>
+            <p class="note">Haz clic en cualquier tarjeta para ver los detalles y la gestión del parte policial.</p>
+        </div>
+        <div class="grid-container">
+            ${items.map(b => {
+            const decl = b.declaration;
+            let badgeClass = 'badge-warning';
+            let badgeText = 'Sin declarar';
+            if (decl) {
+                if (decl.status === 'pending') {
+                    badgeClass = 'badge-pending';
+                    badgeText = 'Pendiente';
+                } else if (decl.rejected > 0) {
+                    badgeClass = 'badge-error';
+                    badgeText = 'Con rechazos';
+                } else {
+                    badgeClass = 'badge-success';
+                    badgeText = 'Declarado OK';
+                }
+            }
+
+            return `
+                    <div class="booking-card" onclick="location.search='?booking=${encodeURIComponent(b.bookingId)}'">
+                        <div class="card-top">
+                            <span class="badge property-badge">${escapeHtml(b.property)}</span>
+                            <span class="badge ${badgeClass}">${badgeText}</span>
+                        </div>
+                        <h3>Reserva #${escapeHtml(b.bookingId)}</h3>
+                        <div class="metrics">
+                            <div class="metric-item highlight-occupancy">
+                                <span class="metric-label">Aforo (Plazas)</span>
+                                <span class="metric-value">${b.occupancy} <span style="font-size:0.65rem; color:#64748b; font-weight:normal">/ ${b.capacity} cap.</span></span>
+                            </div>
+                            <div class="metric-item highlight-police">
+                                <span class="metric-label">Parte Policial</span>
+                                <span class="metric-value">${b.travellersDeclared} viajeros</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+        }).join('')}
+        </div>
+    `;
+    }
+
+    function renderDetail(summary) {
+        const decl = summary.declaration;
+        let statusBadge = '<span class="badge badge-warning">Sin declarar</span>';
+        let declarationUI = '';
+
+        if (decl) {
+            if (decl.status === 'pending') {
+                statusBadge = '<span class="badge badge-pending">Procesando por la policía...</span>';
+                declarationUI = `<p class="note" style="margin-top:1rem;">El lote de la declaración se encuentra pendiente de validación por la autoridad.</p>`;
+            } else {
+                const isAccepted = decl.rejected === 0;
+                statusBadge = isAccepted ? '<span class="badge badge-success">Aceptado por la Autoridad</span>' : '<span class="badge badge-error">Rechazado Parcialmente</span>';
+                declarationUI = `
+                <div class="decl-stats" style="margin-top: 1rem;">
+                    <div class="stat-box"><strong>Batch ID:</strong> <code>${escapeHtml(decl.batchId)}</code></div>
+                    <div class="stat-box success-text"><strong>Aceptados:</strong> ${decl.accepted}</div>
+                    <div class="stat-box ${decl.rejected > 0 ? 'error-text' : ''}"><strong>Rechazados:</strong> ${decl.rejected}</div>
+                </div>
+                ${decl.rejections && decl.rejections.length > 0 ? `
+                    <div style="margin-top: 1rem;">
+                        <h4 style="color: var(--danger); margin-bottom: 0.5rem;">Detalle de Rechazos:</h4>
+                        <pre>${escapeHtml(JSON.stringify(decl.rejections, null, 2))}</pre>
+                    </div>
+                ` : ''}
+            `;
+            }
+        } else {
+            declarationUI = `<p class="note" style="margin-top: 1rem;">Aún no se ha enviado el parte de esta reserva a las autoridades policiales.</p>`;
+        }
+
+        out.innerHTML = `
+        <a class="back" href="?">← Volver al listado general</a>
+        <div class="detail-container">
+            <div class="detail-header">
+                <div>
+                    <h2 style="margin:0 0 0.25rem 0;">Reserva #${escapeHtml(summary.bookingId)}</h2>
+                    <span class="note">Propiedad: <strong>${escapeHtml(summary.property)}</strong></span>
+                </div>
+                <div>${statusBadge}</div>
+            </div>
+
+            <div class="detail-grid">
+                <div class="info-card">
+                    <h3>Datos de la Villa</h3>
+                    <dl>
+                        <dt>ID de Reserva:</dt><dd>${escapeHtml(summary.bookingId)}</dd>
+                        <dt>Nombre:</dt><dd>${escapeHtml(summary.property)}</dd>
+                        <dt>Capacidad Máxima:</dt><dd>${summary.capacity} personas</dd>
+                    </dl>
+                </div>
+
+                <div class="info-card comparison-card">
+                    <h3>Reglas de Negocio (Diferenciadas)</h3>
+                    <div class="comparison-box" style="margin-top: 0.5rem;">
+                        <div class="comp-item">
+                            <span class="comp-title">Aforo (Ocupación)</span>
+                            <span class="comp-num">${summary.occupancy}</span>
+                            <span class="comp-desc">Excluye menores de 2 años</span>
+                        </div>
+                        <div class="comp-item" style="border: 1px solid #ddd;">
+                            <span class="comp-title">Parte Policial</span>
+                            <span class="comp-num" style="color: #7c3aed;">${summary.travellersDeclared}</span>
+                            <span class="comp-desc">Incluye a todos sin excepción</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="declaration-section">
+                <h3 style="margin-top: 0;">Declaración Policial (SES)</h3>
+                ${declarationUI}
+
+                <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                    ${!decl || decl.status === 'error' ? `
+                        <button class="btn-primary" id="decl-btn" onclick="triggerDeclaration('${summary.bookingId}')">Declarar a la Policía</button>
+                    ` : `
+                        <button class="btn-secondary" onclick="load()">Actualizar Estado del Lote</button>
+                    `}
+                </div>
+            </div>
+        </div>
+    `;
+    }
+
+    async function triggerDeclaration(bookingId) {
+        const btn = document.getElementById('decl-btn');
+        if (btn) {
+            btn.textContent = "Enviando declaración...";
+            btn.disabled = true;
+        }
+        try {
+            await ask(`/api/bookings/${encodeURIComponent(bookingId)}/declaration`, { method: "POST" });
+            // Breve pausa para dar tiempo a que el backend resuelva el polling y recargar
+            setTimeout(load, 1200);
+        } catch (error) {
+            alert("Error al declarar: " + error.message);
+            if (btn) {
+                btn.textContent = "Declarar a la Policía";
+                btn.disabled = false;
+            }
+        }
+    }
+
+    async function load() {
+        const wanted = new URLSearchParams(location.search).get("booking");
+        out.innerHTML = `<div style="text-align: center; padding: 3rem; color: var(--text-muted);">Cargando información...</div>`;
+        try {
+            if (wanted) {
+                renderDetail(await ask(`/api/bookings/${encodeURIComponent(wanted)}/summary`));
+            } else {
+                renderList((await ask("/api/bookings")).items ?? []);
+            }
+        } catch (error) {
+            out.innerHTML = `<p class="problem">Error al cargar: ${escapeHtml(error.message ?? error)}</p>`;
+        }
+    }
+
+    load();
 </script>
 </body>
 </html>
