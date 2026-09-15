@@ -1,6 +1,7 @@
 package es.workfactory.occupancy.domain;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * The two calculations the exercise asks for.
@@ -19,7 +20,11 @@ public final class Totals {
      * people is not an error: they are two counts and both are correct.
      */
     public static int occupancy(Booking booking, List<Guest> guests, String today) {
-        throw new UnsupportedOperationException("Not implemented");
+        int counter = 0;
+        for (Guest guest : guests) {
+            if (Ages.on(guest.birthDate(), today) >= 2) counter++;
+        }
+        return counter;
     }
 
     /**
@@ -29,6 +34,15 @@ public final class Totals {
      * the same catalogue, even when the letters sometimes match.
      */
     public static List<PoliceReportLine> policeReportLines(List<Guest> guests, String today) {
-        throw new UnsupportedOperationException("Not implemented");
+        return guests.stream().map(guest -> {
+            guest.firstName(),
+            guest.lastName(),
+            guest.birthDate(),
+            guest.nationality(),
+            guest.gender(),
+            guest.kinshipRelationship(),
+            null,
+            guest.documentNumber());
+        }).collect(Collectors.toList());
     }
 }
