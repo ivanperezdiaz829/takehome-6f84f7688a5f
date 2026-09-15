@@ -8,8 +8,14 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.HashMap;
 
 /**
  * Your API, and the screen it feeds. The routing, the static page and the error envelope
@@ -20,9 +26,6 @@ import java.util.regex.Pattern;
 public final class Server {
 
     private static final Pattern BOOKING = Pattern.compile("^/api/bookings/([^/]+)/(summary|declaration)$");
-    private static final ApiClient API = new ApiClient();
-    private static final com.fasterxml.jackson.databind.ObjectMapper MAPPER = new com.fasterxml.jackson.databind.ObjectMapper();
-    private static final java.util.Map<String, String> BATCHES = new java.util.concurrent.ConcurrentHashMap<>();
 
     private Server() {}
 
@@ -36,12 +39,12 @@ public final class Server {
      */
     private static void listBookings(HttpExchange exchange) throws IOException {
         try {
-            java.util.List<es.workfactory.occupancy.domain.Booking> bookings = API.listBookings();
-            java.util.List<java.util.Map<String, Object>> items = new java.util.ArrayList<>();
-            for (es.workfactory.occupancy.domain.Booking booking : bookings) {
-                items.add(buildSummary(booking.id(), booking));
+            List<es.workfactory.occupancy.domain.Booking> bookings = API.listBookings();
+            List<Map<String, Object>> items = new ArrayList<>();
+            for (es.workfactory.occupancy.domain.Booking b : bookings) {
+                items.add(buildSummary(b.id(), b));
             }
-            Json.send(exchange, 200, java.util.Map.of("items", items));
+            Json.send(exchange, 200, Map.of("items", items));
         } catch (Exception e) {
             Json.fail(exchange, 500, "API_ERROR", e.getMessage());
         }
@@ -60,8 +63,8 @@ public final class Server {
     private static void summary(HttpExchange exchange, String bookingId) throws IOException {
         try {
             es.workfactory.occupancy.domain.Booking booking = API.getBooking(bookingId);
-            java.util.Map<String, Object> summary = buildSummary(bookingId, booking);
-            Json.send(exchange, 200, summary);
+            Map<String, Object> sum = buildSummary(bookingId, booking);
+            Json.send(exchange, 200, sum);
         } catch (Exception e) {
             Json.fail(exchange, 500, "API_ERROR", e.getMessage());
         }
@@ -71,11 +74,13 @@ public final class Server {
     private static void declareBooking(HttpExchange exchange, String bookingId) throws IOException {
         try {
             es.workfactory.occupancy.domain.Booking booking = API.getBooking(bookingId);
-            java.util.List<es.workfactory.occupancy.domain.Guest> guests = fetchAllGuests(bookingId);
-            java.util.List<es.workfactory.occupancy.domain.PoliceReportLine> lines = es.workfactory.occupancy.domain.Totals.policeReportLines(guests, booking.checkInDate());
+            List<es.workfactory.occupancy.domain.Guest> guests = fetchAllGuests(bookingId);
+            List<es.workfactory.occupancy.domain.PoliceReportLine> lines = es.workfactory.occupancy.domain.Totals.policeReportLines(guests, booking.checkInDate());
+
             String batchId = API.declare(bookingId, lines);
             BATCHES.put(bookingId, batchId);
-            Json.send(exchange, 200, java.util.Map.of("batchId", batchId));
+
+            Json.send(exchange, 200, Map.of("batchId", batchId));
         } catch (Exception e) {
             Json.fail(exchange, 500, "API_ERROR", e.getMessage());
         }
@@ -86,24 +91,28 @@ public final class Server {
         try {
             String batchId = BATCHES.get(bookingId);
             if (batchId == null) {
-                Json.fail(exchange, 400, "API_ERROR", "No batch id found");
+                Json.fail(exchange, 404, "NOT_DECLARED", "No declaration for this booking yet");
                 return;
             }
-            com.fasterxml.jackson.databind.JsonNode batchNode = API.getBatch(batchId);
-            Json.send(exchange, 200, MAPPER.convertValue(batchNode, java.util.Map.class));
+            JsonNode batchNode = API.getBatch(batchId);
+            Json.send(exchange, 200, MAPPER.convertValue(batchNode, Map.class));
         } catch (Exception e) {
             Json.fail(exchange, 500, "API_ERROR", e.getMessage());
         }
     }
 
     /** FUNCIONES A USAR EN CADA SECCIÓN DE "YOUR JOB" **/
-    private static java.util.Map<String, Object> buildSummary(String bookingId, es.workfactory.occupancy.domain.Booking booking) throws Exception {
-        java.util.List<es.workfactory.occupancy.domain.Guest> guests = fetchAllGuests(bookingId);
+    private static final ApiClient API = new ApiClient();
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final Map<String, String> BATCHES = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private static Map<String, Object> buildSummary(String bookingId, es.workfactory.occupancy.domain.Booking booking) throws Exception {
+        List<es.workfactory.occupancy.domain.Guest> guests = fetchAllGuests(bookingId);
         String today = booking.checkInDate();
         int occupancy = es.workfactory.occupancy.domain.Totals.occupancy(booking, guests, today);
-        java.util.List<es.workfactory.occupancy.domain.PoliceReportLine> lines = es.workfactory.occupancy.domain.Totals.policeReportLines(guests, today);
+        List<es.workfactory.occupancy.domain.PoliceReportLine> lines = es.workfactory.occupancy.domain.Totals.policeReportLines(guests, today);
 
-        java.util.Map<String, Object> summary = new java.util.HashMap<>();
+        Map<String, Object> summary = new HashMap<>();
         summary.put("bookingId", booking.id());
         summary.put("property", booking.property());
         summary.put("capacity", booking.capacity());
@@ -112,14 +121,24 @@ public final class Server {
 
         String batchId = BATCHES.get(bookingId);
         if (batchId != null) {
-            com.fasterxml.jackson.databind.JsonNode batchNode = API.getBatch(batchId);
-            summary.put("declaration", MAPPER.convertValue(batchNode, java.util.Map.class));
-        } else summary.put("declaration", null);
+            JsonNode batchNode = API.getBatch(batchId);
+            summary.put("declaration", MAPPER.convertValue(batchNode, Map.class));
+        } else {
+            summary.put("declaration", null);
+        }
         return summary;
     }
 
-    private static java.util.List<es.workfactory.occupancy.domain.Guest> fetchAllGuests(String bookingId) throws Exception {
-        return API.allGuestsOf(bookingId);
+    private static List<es.workfactory.occupancy.domain.Guest> fetchAllGuests(String bookingId) throws Exception {
+        List<es.workfactory.occupancy.domain.Guest> all = new ArrayList<>();
+        int page = 1;
+        while (true) {
+            List<es.workfactory.occupancy.domain.Guest> pageGuests = API.guestsOf(bookingId, page);
+            if (pageGuests.isEmpty()) break;
+            all.addAll(pageGuests);
+            page++;
+        }
+        return all;
     }
 
     public static HttpServer start(int port) throws IOException {
@@ -139,7 +158,6 @@ public final class Server {
         }
 
         if (method.equals("GET") && (path.equals("/") || path.equals("/index.html"))) {
-            // Un fallo aqui no puede tumbar al servidor: se contesta con el sobre de siempre.
             try {
                 Json.html(exchange, screen());
             } catch (IOException missing) {
@@ -154,6 +172,23 @@ public final class Server {
                 return;
             }
             listBookings(exchange);
+            return;
+        }
+
+        Pattern guestsPattern = Pattern.compile("^/api/bookings/([^/]+)/guests$");
+        Matcher guestsMatcher = guestsPattern.matcher(path);
+        if (guestsMatcher.matches() && method.equals("GET")) {
+            String bookingId = guestsMatcher.group(1);
+            try {
+                List<es.workfactory.occupancy.domain.Guest> guests = API.guestsOf(bookingId, 1);
+                Map<String, Object> response = new HashMap<>();
+                response.put("items", guests);
+                Json.send(exchange, 200, response);
+            } catch (Exception e) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("items", new ArrayList<>());
+                Json.send(exchange, 200, response);
+            }
             return;
         }
 
