@@ -15,7 +15,7 @@
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
     <property name="user.country" value="ES"/>
     <property name="sun.boot.library.path" value="C:\Users\ivanp\.jdks\openjdk-26.0.2.1\bin"/>
-    <property name="sun.java.command" value="C:\Users\ivanp\AppData\Local\Temp\surefire5087987752741799709\surefirebooter-20260915184132639_3.jar C:\Users\ivanp\AppData\Local\Temp\surefire5087987752741799709 2026-09-15T18-41-32_570-jvmRun1 surefire-20260915184132639_1tmp surefire_0-20260915184132639_2tmp"/>
+    <property name="sun.java.command" value="C:\Users\ivanp\AppData\Local\Temp\surefire15405883612038650669\surefirebooter-20260915190140434_3.jar C:\Users\ivanp\AppData\Local\Temp\surefire15405883612038650669 2026-09-15T19-01-40_365-jvmRun1 surefire-20260915190140434_1tmp surefire_0-20260915190140434_2tmp"/>
     <property name="jdk.debug" value="release"/>
     <property name="surefire.test.class.path" value="C:\Users\ivanp\Desktop\takehome-6f84f7688a5f\backend\target\test-classes;C:\Users\ivanp\Desktop\takehome-6f84f7688a5f\backend\target\classes;C:\Users\ivanp\.m2\repository\com\fasterxml\jackson\core\jackson-databind\2.18.2\jackson-databind-2.18.2.jar;C:\Users\ivanp\.m2\repository\com\fasterxml\jackson\core\jackson-annotations\2.18.2\jackson-annotations-2.18.2.jar;C:\Users\ivanp\.m2\repository\com\fasterxml\jackson\core\jackson-core\2.18.2\jackson-core-2.18.2.jar;C:\Users\ivanp\.m2\repository\org\junit\jupiter\junit-jupiter\5.11.4\junit-jupiter-5.11.4.jar;C:\Users\ivanp\.m2\repository\org\junit\jupiter\junit-jupiter-api\5.11.4\junit-jupiter-api-5.11.4.jar;C:\Users\ivanp\.m2\repository\org\opentest4j\opentest4j\1.3.0\opentest4j-1.3.0.jar;C:\Users\ivanp\.m2\repository\org\junit\platform\junit-platform-commons\1.11.4\junit-platform-commons-1.11.4.jar;C:\Users\ivanp\.m2\repository\org\apiguardian\apiguardian-api\1.1.2\apiguardian-api-1.1.2.jar;C:\Users\ivanp\.m2\repository\org\junit\jupiter\junit-jupiter-params\5.11.4\junit-jupiter-params-5.11.4.jar;C:\Users\ivanp\.m2\repository\org\junit\jupiter\junit-jupiter-engine\5.11.4\junit-jupiter-engine-5.11.4.jar;C:\Users\ivanp\.m2\repository\org\junit\platform\junit-platform-engine\1.11.4\junit-platform-engine-1.11.4.jar;"/>
     <property name="sun.cpu.endian" value="little"/>
@@ -30,7 +30,7 @@
     <property name="line.separator" value="&#10;"/>
     <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
-    <property name="surefire.real.class.path" value="C:\Users\ivanp\AppData\Local\Temp\surefire5087987752741799709\surefirebooter-20260915184132639_3.jar"/>
+    <property name="surefire.real.class.path" value="C:\Users\ivanp\AppData\Local\Temp\surefire15405883612038650669\surefirebooter-20260915190140434_3.jar"/>
     <property name="user.script" value=""/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
     <property name="java.runtime.version" value="26.0.2.1+1-7"/>
@@ -59,5 +59,5 @@
     <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
     <property name="java.class.version" value="70.0"/>
   </properties>
-  <testcase name="ageDoesNotDriftWithTheTimeZone" classname="es.workfactory.occupancy.domain.AgesTest" time="0.013"/>
+  <testcase name="ageDoesNotDriftWithTheTimeZone" classname="es.workfactory.occupancy.domain.AgesTest" time="0.014"/>
 </testsuite>

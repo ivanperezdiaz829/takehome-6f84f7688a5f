@@ -87,7 +87,13 @@ public final class ApiClient {
     /** Returns one page of guests. */
     public List<Guest> guestsOf(String bookingId, int page) throws Exception {
         List<Guest> guests = new ArrayList<>();
-        JsonNode body = request("/bookings/" + bookingId + "/guests?page=" + page, null);
+        JsonNode body;
+        try { body = request("/bookings/" + bookingId + "/guests?page=" + page, null); }
+        catch (IllegalStateException e) {
+            if (e.getMessage().contains("404")) return guests;
+            throw e;
+        }
+
         for (JsonNode node : body.path("items")) {
             JsonNode document = node.path("documentNumber");
             guests.add(new Guest(
