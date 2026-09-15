@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Occupancy and police report</title>
+<style>
+  body { font: 15px/1.5 system-ui, sans-serif; margin: 2rem auto; max-width: 52rem; padding: 0 1rem; }
+  h1 { font-size: 1.25rem; }
+  h2 { font-size: 1.1rem; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { text-align: left; padding: .5rem .75rem; border-bottom: 1px solid #e5e5e5; }
+  th { font-weight: 600; color: #555; font-size: .875rem; }
+  td.number { font-variant-numeric: tabular-nums; }
+  tbody tr { cursor: pointer; }
+  tbody tr:hover { background: #f6f6f6; }
+  dl { display: grid; grid-template-columns: auto 1fr; gap: .4rem 1.5rem; align-items: baseline; }
+  dt { color: #555; }
+  dd { margin: 0; font-variant-numeric: tabular-nums; }
+  .note { color: #777; font-size: .875rem; }
+  .problem { color: #a11; }
+  .back { display: inline-block; margin-bottom: 1rem; }
+  button { font: inherit; padding: .4rem .9rem; cursor: pointer; }
+  .todo { border: 1px dashed #b58; background: #fdf7fb; padding: 1rem 1.25rem; }
+</style>
+</head>
+<body>
+<h1>Occupancy and police report</h1>
+
+<div id="out">Cargando…</div>
+
+<script>
+/**
+ * La pantalla. La mitad de delante del ejercicio, y pesa lo mismo que la de detrás.
+ *
+ * Escrito ya: el `fetch` con el sobre de error, el enrutado por `?booking=` y el escapado.
+ * Tuyo: las dos funciones que pintan. Igual que en el dominio hay dos sin escribir, aquí hay dos.
+ *
+ * Puedes tirar este fichero entero y montarlo con lo que quieras: React, Vue, Svelte, Vite o
+ * HTML plano. No se puntúa la tecnología ni el diseño.
+ */
+const out = document.getElementById("out");
+
+function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, (character) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+    })[character]);
+}
+
+/**
+ * Pide algo a tu API. Sirve para el GET y para el POST, y ya entiende el sobre de error
+ * que devuelven tus manejadores.
+ */
+async function ask(path, options = {}) {
+    const response = await fetch(path, options);
+    const body = await response.json().catch(() => null);
+    if (!response.ok) {
+        throw new Error(`${body?.error?.code ?? response.status}: ${body?.error?.message ?? ""}`);
+    }
+    return body;
+}
+
+/**
+ * TU TRABAJO (1 de 2): el listado.
+ *
+ * Recibe lo que devuelve `GET /api/bookings`. De cada reserva tiene que verse la capacidad, el
+ * aforo, los viajeros que van al parte y cómo quedó la declaración, y al pulsar una, entrar en su
+ * detalle (`?booking=<id>`).
+ *
+ * Lo único que puntúa: que al mirarlo se entienda que el aforo y los viajeros son dos números
+ * distintos, y de dónde sale cada uno.
+ */
+function renderList(bookings) {
+    out.className = "todo";
+    out.innerHTML = `<p><b>PANTALLA_SIN_ESCRIBIR</b> · el listado</p>
+      <p>La API te ha devuelto ${bookings.length} reservas y esta función todavía no las pinta.
+      Cuando lo haga, este aviso desaparece, y hay un test que lo comprueba.</p>`;
+}
+
+/**
+ * TU TRABAJO (2 de 2): el detalle de una reserva.
+ *
+ * Recibe lo que devuelve `GET /api/bookings/:id/summary`. Además de los números, desde aquí se
+ * **declara el parte**: un botón que llama a `POST /api/bookings/:id/declaration` y enseña cómo
+ * ha ido. Ten en cuenta que la autoridad no contesta al momento.
+ *
+ * Los estados que se te van a dar de verdad: cargando, error, sin declarar, pendiente y
+ * rechazada. Cúbrelos.
+ */
+function renderDetail(data) {
+    out.className = "todo";
+    out.innerHTML = `<p><b>PANTALLA_SIN_ESCRIBIR</b> · el detalle de ${escapeHtml(data.bookingId ?? "")}</p>
+      <p>Aquí van los dos totales, la declaración y el botón para declararla.</p>
+      <p><a class="back" href="?">← todas las reservas</a></p>`;
+}
+
+/** El enrutado y el manejo del fallo. Escrito, para que empieces por lo que se ve. */
+async function load() {
+    const wanted = new URLSearchParams(location.search).get("booking");
+    out.textContent = "Cargando…";
+    try {
+        if (wanted) {
+            renderDetail(await ask(`/api/bookings/${encodeURIComponent(wanted)}/summary`));
+        } else {
+            renderList((await ask("/api/bookings")).items ?? []);
+        }
+    } catch (error) {
+        out.innerHTML = `<p class="problem">${escapeHtml(error.message ?? error)}</p>`;
+    }
+}
+
+load();
+</script>
+</body>
+</html>
