@@ -1,0 +1,12 @@
+-------------------------------------------------------------------------------
+Test set: es.workfactory.occupancy.CheckIT
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 2.758 s <<< FAILURE! -- in es.workfactory.occupancy.CheckIT
+es.workfactory.occupancy.CheckIT -- Time elapsed: 2.758 s <<< ERROR!
+java.lang.IllegalStateException: The API answered 404 at /api/bookings/2109/guests?page=2
+	at es.workfactory.occupancy.CheckIT.upstream(CheckIT.java:155)
+	at es.workfactory.occupancy.CheckIT.everyGuest(CheckIT.java:181)
+	at es.workfactory.occupancy.CheckIT.capture(CheckIT.java:110)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1612)
+

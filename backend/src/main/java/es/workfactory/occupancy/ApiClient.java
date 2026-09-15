@@ -39,23 +39,37 @@ public final class ApiClient {
     }
 
     private JsonNode request(String path, Object body) throws Exception {
-        HttpRequest.Builder request = HttpRequest.newBuilder()
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
                 .uri(URI.create(base + path))
                 .timeout(Duration.ofSeconds(30))
                 .header("Authorization", "Bearer " + token)
                 .header("Content-Type", "application/json");
 
         if (body == null) {
-            request.GET();
+            builder.GET();
         } else {
-            request.POST(HttpRequest.BodyPublishers.ofString(MAPPER.writeValueAsString(body)));
+            builder.POST(HttpRequest.BodyPublishers.ofString(MAPPER.writeValueAsString(body)));
         }
 
-        HttpResponse<String> response = http.send(request.build(), HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() >= 300) {
-            throw new IllegalStateException("HTTP " + response.statusCode() + " at " + path);
+        HttpRequest httpRequest = builder.build();
+        int numRetries = 5;
+        int delayMS = 500;
+        for (int counter = 1; counter <= numRetries; counter++) {
+            HttpResponse<String> response = http.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() == 503) {
+                if (counter == numRetries) {
+                    throw new IllegalStateException("HTTP 503 at " + path + " after " + numRetries + " retries");
+                }
+                Thread.sleep(delayMS);
+                delayMS *= 2;
+                continue;
+            }
+            if (response.statusCode() >= 300) {
+                throw new IllegalStateException("HTTP " + response.statusCode() + " at " + path);
+            }
+            return MAPPER.readTree(response.body());
         }
-        return MAPPER.readTree(response.body());
+        throw new IllegalStateException("Unreachable");
     }
 
     public List<Booking> listBookings() throws Exception {
