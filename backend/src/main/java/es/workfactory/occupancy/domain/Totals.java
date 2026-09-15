@@ -35,14 +35,16 @@ public final class Totals {
      */
     public static List<PoliceReportLine> policeReportLines(List<Guest> guests, String today) {
         return guests.stream().map(guest -> {
-            guest.firstName(),
-            guest.lastName(),
-            guest.birthDate(),
-            guest.nationality(),
-            guest.gender(),
-            guest.kinshipRelationship(),
-            null,
-            guest.documentNumber());
+            return new PoliceReportLine(
+                guest.firstName(),
+                guest.lastName(),
+                guest.birthDate(),
+                guest.nationality(),
+                guest.gender(),
+                guest.kinshipRelationship(),
+                null,
+                guest.documentNumber()
+            );
         }).collect(Collectors.toList());
     }
 }
